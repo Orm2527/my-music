@@ -129,6 +129,11 @@
 
         // 初始化載入
         renderSongs();
+// 自動播放下一首
+    audioElement.addEventListener('ended', function() {
+        currentSongIndex = (currentSongIndex + 1) % songs.length;
+        playSong(currentSongIndex);
+    });
     </script>
 </body>
 </html>
