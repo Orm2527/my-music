@@ -60,7 +60,7 @@
             songListEl.innerHTML = '';
             songs.filter(s => s.title.includes(filter) || s.artist.includes(filter)).forEach((song, index) => {
                 const card = document.createElement('div');
-                card.className = "bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-sm flex justify-between items-center cursor-pointer hover:bg-white/90 transition";
+                card.className = "bg-white/50 backdrop-blur-md p-4 rounded-xl shadow-sm flex justify-between items-center cursor-pointer hover:bg-white/90 transition";
                 card.innerHTML = `
                     <div>
                         <h3 class="font-bold text-purple-950">${song.title}</h3>
