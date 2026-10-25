@@ -7,7 +7,7 @@
     <!-- 引入 Tailwind CSS 樣式庫，讓網頁瞬間變好看 -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body style="background-image: url('1127.jpg'); background-size: cover; background-position: center; background-attachment: fixed;" class="text-gray-800 min-h-screen flex flex-col justify-between">
+<body style="background-image: url('9502.jpg'); background-size: cover; background-position: center; background-attachment: fixed;" class="text-gray-800 min-h-screen flex flex-col justify-between">
 
     <!-- 頂部標題與搜尋區 -->
     <div class="max-w-md mx-auto w-full p-4">
@@ -129,6 +129,11 @@
 
         // 初始化載入
         renderSongs();
+// 自動播放下一首
+    audioElement.addEventListener('ended', function() {
+        currentSongIndex = (currentSongIndex + 1) % songs.length;
+        playSong(currentSongIndex);
+    });
     </script>
 </body>
 </html>
