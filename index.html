@@ -110,40 +110,6 @@
             playerBar.classList.remove('hidden');
             playBtn.innerText = '⏸ 暫停';
         }
-	// 自動循環播放下一首
-audioElement.addEventListener('ended', function() {
-    currentSongIndex = (currentSongIndex + 1) % songs.length;
-    playSong(currentSongIndex);
-});
-
-// 歌曲進度條與時間控制
-const progressBar = document.getElementById('progressBar');
-const currentTimeEl = document.getElementById('currentTime');
-const durationEl = document.getElementById('duration');
-
-// 輔助函數：秒數轉 mm:ss
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-}
-
-// 當音樂總長度載入完成
-audioElement.addEventListener('loadedmetadata', () => {
-    durationEl.textContent = formatTime(audioElement.duration);
-    progressBar.max = audioElement.duration;
-});
-
-// 播放時即時更新進度條與時間
-audioElement.addEventListener('timeupdate', () => {
-    progressBar.value = audioElement.currentTime;
-    currentTimeEl.textContent = formatTime(audioElement.currentTime);
-});
-
-// 拖曳進度條快進
-progressBar.addEventListener('input', () => {
-    audioElement.currentTime = progressBar.value;
-});
 
         // 播放/暫停切換
         function togglePlay() {
