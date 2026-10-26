@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Music Archive</title>
-    <!-- 引入 Tailwind CSS 樣式庫，讓網頁瞬間變好看 -->
+    <!-- 引入 Tailwind CSS 樣式庫 -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body style="background-image: url('9502.jpg'); background-size: cover; background-position: center; background-attachment: fixed;" class="text-gray-800 min-h-screen flex flex-col justify-between">
@@ -18,62 +18,76 @@
         <input type="text" id="searchInput" placeholder="搜尋歌曲、歌手..." class="w-full p-3 rounded-xl border border-purple-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4">
         
         <!-- 歌曲清單 -->
-        <div id="songList" class="space-y-3 mb-24">
+        <div id="songList" class="space-y-3 mb-32">
             <!-- 歌曲會透過 JavaScript 動態載入這裡 -->
         </div>
     </div>
 
     <!-- 底部音樂播放器（預設隱藏，點擊播放後出現） -->
     <div id="playerBar" class="fixed bottom-0 left-0 right-0 bg-purple-900 text-white p-4 shadow-lg hidden">
-        <div class="max-w-md mx-auto flex items-center justify-between">
-            <div>
-                <div id="playerTitle" class="font-bold text-sm">歌曲名稱</div>
-                <div id="playerArtist" class="text-xs text-purple-300">歌手</div>
+        <div class="max-w-md mx-auto">
+            <!-- 歌曲進度條 -->
+            <div class="w-full mb-2">
+                <input type="range" id="progressBar" value="0" max="100" class="w-full accent-purple-300 cursor-pointer">
+                <div class="flex justify-between text-xs text-purple-300">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
             </div>
-            <div class="flex items-center space-x-4">
-                <button onclick="togglePlay()" id="playBtn" class="bg-purple-300 text-purple-950 px-4 py-2 rounded-full font-bold">⏸ 暫停</button>
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <div id="playerTitle" class="font-bold text-sm">歌曲名稱</div>
+                    <div id="playerArtist" class="text-xs text-purple-300">歌手</div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="prevBtn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold">⏮ 上一首</button>
+                    <button onclick="togglePlay()" id="playBtn" class="bg-purple-300 text-purple-950 px-4 py-2 rounded-lg text-sm font-bold">⏸ 暫停</button>
+                    <button id="nextBtn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold">下一首 ⏭</button>
+                </div>
             </div>
         </div>
         <audio id="audioElement"></audio>
     </div>
 
     <script>
-        // 這裡可以放入你的音樂清單資料
         const songs = [
             { title: "01.Dracula", artist: "LingOrm", url: "01.Dracula.mp3" },
-	    { title: "02.Rockstar", artist: "LingOrm", url: "02.Rockstar.mp3" },
-	    { title: "03.BadAngel", artist: "LingOrm", url: "03.BadAngel.mp3" },
-	    { title: "04.heaven7", artist: "LingOrm", url: "04.heaven7.mp3" },
-	    { title: "05.LoveOnTop", artist: "LingLing Kwong", url: "05.LoveOnTop.mp3" },
-	    { title: "06.OnePunch", artist: "Orm Kornnaphat", url: "06.OnePunch.mp3" },
-	    { title: "07.NOW", artist: "Orm x Gel Boys", url: "07.NOW.mp3" },
-	    { title: "09.Until I Found You", artist: "LingLing Kwong", url: "09.Until I Found You.mp3" },
-	    { title: "10.L-O-V-E", artist: "LingLing Kwong", url: "10.L-O-V-E.mp3" },
-	    { title: "11. Risk it all", artist: "Orm Kornnaphat", url: "11. Risk it all.mp3" },
-	    { title: "12. ขี้แง(Boys Don’t Cry)", artist: "LingOrm", url: "12. ขี้แง(Boys Don’t Cry).mp3" },
-	    { title: "13. Magnetic", artist: "LingOrm LOLO ButterBear", url: "13. Magnetic" },
-	    { title: "15. หล่ออนิเมะ", artist: "LingOrm", url: "15. หล่ออนิเมะ.mp3" },
-	    { title: "16. Nobody", artist: "Ling x Oat x Pop", url: "16. Nobody.mp3" },
-	    { title: "18. สวยเด้งดิ้ง", artist: "LingLing Kwong", url: "18. สวยเด้งดิ้ง.mp3" },
-	    { title: "19. T2T", artist: "LingOrm", url: "19. T2T.mp3" },
-	    { title: "20. Sports Car", artist: "Orm Kornnaphat", url: "20. Sports Car.mp3" },
-	    { title: "21. หวานใจผมน่ารักกว่าใคร", artist: "LingOrm", url: "21. หวานใจผมน่ารักกว่าใคร.mp3" },
-	    { title: "22. เจ็บนิดๆ", artist: "LingOrm x Bow", url: "22. เจ็บนิดๆ.mp3" },
-	    { title: "23. เกินต้าน (Too Cute)", artist: "Bow", url: "23. เกินต้าน (Too Cute).mp3" },
-	    { title: "24. Love Shot", artist: "LingOrm", url: "24. Love Shot.mp3" },
-	    { title: "25. Ma Boy", artist: "LingOrm", url: "25. Ma Boy.mp3" },
-	    { title: "26. ล็อกเป้า (Lock Pao)", artist: "LingOrm", url: "26. ล็อกเป้า (Lock Pao).mp3" },
-	    { title: "27. I Am The Best", artist: "LingOrm", url: "27. I Am The Best.mp3" },
-	    { title: "28. Touch", artist: "LingOrm", url: "28. Touch.mp3" },
-	    { title: "29. การเดินทางที่สวยงาม", artist: "LingOrm", url: "29. การเดินทางที่สวยงาม.mp3" },
-	    { title: "30. Rocket Festival(สัญญาเดือนหก)", artist: "LingOrm", url: "30. Rocket Festival(สัญญาเดือนหก).mp3" },
-	    { title: "31. โอ้ละหนอ…My Love", artist: "LingOrm", url: "31. โอ้ละหนอ…My Love.mp3" },
-	    { title: "32. เด็กดอยใจดี", artist: "LingOrm", url: "32. เด็กดอยใจดี.mp3" },
-	    { title: "33.ไม่ได้ก็ไม่เอา (YOU ARE MY LIGHT)", artist: "Ling x PP", url: "33.ไม่ได้ก็ไม่เอา (YOU ARE MY LIGHT).mp3" },
-	    { title: "34.FLY ME TO THE MOON CAN'T TAKE MY EYES OFF YOU", artist: "LingLing Kwong", url: "34.FLY ME TO THE MOON CAN'T TAKE MY EYES OFF YOU.mp3" },
-	    { title: "35.G.A.Y", artist: "Orm Kornnaphat", url: "35.G.A.Y.mp3" },
-	    { title: "36.GO GO JUICE", artist: "Orm Kornnaphat", url: "36.GO GO JUICE.mp3" },
+            { title: "02.Rockstar", artist: "LingOrm", url: "02.Rockstar.mp3" },
+            { title: "03.BadAngel", artist: "LingOrm", url: "03.BadAngel.mp3" },
+            { title: "04.heaven7", artist: "LingOrm", url: "04.heaven7.mp3" },
+            { title: "05.LoveOnTop", artist: "LingLing Kwong", url: "05.LoveOnTop.mp3" },
+            { title: "06.OnePunch", artist: "Orm Kornnaphat", url: "06.OnePunch.mp3" },
+            { title: "07.NOW", artist: "Orm x Gel Boys", url: "07.NOW.mp3" },
+            { title: "09.Until I Found You", artist: "LingLing Kwong", url: "09.Until I Found You.mp3" },
+            { title: "10.L-O-V-E", artist: "LingLing Kwong", url: "10.L-O-V-E.mp3" },
+            { title: "11. Risk it all", artist: "Orm Kornnaphat", url: "11. Risk it all.mp3" },
+            { title: "12. ขี้แง(Boys Don’t Cry)", artist: "LingOrm", url: "12. ขี้แง(Boys Don’t Cry).mp3" },
+            { title: "13. Magnetic", artist: "LingOrm LOLO ButterBear", url: "13. Magnetic" },
+            { title: "15. หล่ออนิเมะ", artist: "LingOrm", url: "15. หล่ออนิเมะ.mp3" },
+            { title: "16. Nobody", artist: "Ling x Oat x Pop", url: "16. Nobody.mp3" },
+            { title: "18. สวยเด้งดิ้ง", artist: "LingLing Kwong", url: "18. สวยเด้งดิ้ง.mp3" },
+            { title: "19. T2T", artist: "LingOrm", url: "19. T2T.mp3" },
+            { title: "20. Sports Car", artist: "Orm Kornnaphat", url: "20. Sports Car.mp3" },
+            { title: "21. หวานใจผมน่ารักกว่าใคร", artist: "LingOrm", url: "21. หวานใจผมน่ารักกว่าใคร.mp3" },
+            { title: "22. เจ็บนิดๆ", artist: "LingOrm x Bow", url: "22. เจ็บนิดๆ.mp3" },
+            { title: "23. เกินต้าน (Too Cute)", artist: "Bow", url: "23. เกินต้าน (Too Cute).mp3" },
+            { title: "24. Love Shot", artist: "LingOrm", url: "24. Love Shot.mp3" },
+            { title: "25. Ma Boy", artist: "LingOrm", url: "25. Ma Boy.mp3" },
+            { title: "26. ล็อกเป้า (Lock Pao)", artist: "LingOrm", url: "26. ล็อกเป้า (Lock Pao).mp3" },
+            { title: "27. I Am The Best", artist: "LingOrm", url: "27. I Am The Best.mp3" },
+            { title: "28. Touch", artist: "LingOrm", url: "28. Touch.mp3" },
+            { title: "29. การเดินทางที่สวยงาม", artist: "LingOrm", url: "29. การเดินทางที่สวยงาม.mp3" },
+            { title: "30. Rocket Festival(สัญญาเดือนหก)", artist: "LingOrm", url: "30. Rocket Festival(สัญญาเดือนหก).mp3" },
+            { title: "31. โอ้ละหนอ…My Love", artist: "LingOrm", url: "31. โอ้ละหนอ…My Love.mp3" },
+            { title: "32. เด็กดอยใจดี", artist: "LingOrm", url: "32. เด็กดอยใจดี.mp3" },
+            { title: "33.ไม่ได้ก็ไม่เอา (YOU ARE MY LIGHT)", artist: "Ling x PP", url: "33.ไม่ได้ก็ไม่เอา (YOU ARE MY LIGHT).mp3" },
+            { title: "34.FLY ME TO THE MOON CAN'T TAKE MY EYES OFF YOU", artist: "LingLing Kwong", url: "34.FLY ME TO THE MOON CAN'T TAKE MY EYES OFF YOU.mp3" },
+            { title: "35.G.A.Y", artist: "Orm Kornnaphat", url: "35.G.A.Y.mp3" },
+            { title: "36.GO GO JUICE", artist: "Orm Kornnaphat", url: "36.GO GO JUICE.mp3" },
         ];
+
+        let currentSongIndex = 0;
 
         const songListEl = document.getElementById('songList');
         const playerBar = document.getElementById('playerBar');
@@ -81,11 +95,14 @@
         const playerArtist = document.getElementById('playerArtist');
         const audioElement = document.getElementById('audioElement');
         const playBtn = document.getElementById('playBtn');
+        const progressBar = document.getElementById('progressBar');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
 
         // 渲染歌曲列表
         function renderSongs(filter = '') {
             songListEl.innerHTML = '';
-            songs.filter(s => s.title.includes(filter) || s.artist.includes(filter)).forEach((song, index) => {
+            songs.filter(s => s.title.includes(filter) || s.artist.includes(filter)).forEach((song, originalIndex) => {
                 const card = document.createElement('div');
                 card.className = "bg-white/20 backdrop-blur-md p-4 rounded-xl shadow-sm flex justify-between items-center cursor-pointer hover:bg-white/90 transition";
                 card.innerHTML = `
@@ -95,13 +112,17 @@
                     </div>
                     <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-lg text-sm font-bold">PLAY</span>
                 `;
-                card.onclick = () => playSong(index);
+                card.onclick = () => {
+                    currentSongIndex = originalIndex;
+                    playSong(currentSongIndex);
+                };
                 songListEl.appendChild(card);
             });
         }
 
         // 播放音樂
         function playSong(index) {
+            currentSongIndex = index;
             const song = songs[index];
             playerTitle.innerText = song.title;
             playerArtist.innerText = song.artist;
@@ -109,6 +130,20 @@
             audioElement.play();
             playerBar.classList.remove('hidden');
             playBtn.innerText = '⏸ 暫停';
+
+            // 支援手機背景播放與鎖定畫面控制 (Media Session API)
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: song.title,
+                    artist: song.artist,
+                    album: "LingOrm Music Archive"
+                });
+
+                navigator.mediaSession.setActionHandler('play', () => togglePlay());
+                navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+                navigator.mediaSession.setActionHandler('previoustrack', () => prevSong());
+                navigator.mediaSession.setActionHandler('nexttrack', () => nextSong());
+            }
         }
 
         // 播放/暫停切換
@@ -122,6 +157,46 @@
             }
         }
 
+        // 上一首 / 下一首函數
+        function prevSong() {
+            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            playSong(currentSongIndex);
+        }
+
+        function nextSong() {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            playSong(currentSongIndex);
+        }
+
+        // 綁定按鈕事件
+        document.getElementById('prevBtn').addEventListener('click', prevSong);
+        document.getElementById('nextBtn').addEventListener('click', nextSong);
+
+        // 自動播放下一首
+        audioElement.addEventListener('ended', nextSong);
+
+        // 時間格式化
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+        }
+
+        // 進度條控制
+        audioElement.addEventListener('loadedmetadata', () => {
+            durationEl.textContent = formatTime(audioElement.duration);
+            progressBar.max = audioElement.duration;
+        });
+
+        audioElement.addEventListener('timeupdate', () => {
+            progressBar.value = audioElement.currentTime;
+            currentTimeEl.textContent = formatTime(audioElement.currentTime);
+        });
+
+        progressBar.addEventListener('input', () => {
+            audioElement.currentTime = progressBar.value;
+        });
+
         // 搜尋功能
         document.getElementById('searchInput').addEventListener('input', (e) => {
             renderSongs(e.target.value);
@@ -129,11 +204,6 @@
 
         // 初始化載入
         renderSongs();
-// 自動播放下一首
-    audioElement.addEventListener('ended', function() {
-        currentSongIndex = (currentSongIndex + 1) % songs.length;
-        playSong(currentSongIndex);
-    });
     </script>
 </body>
 </html>

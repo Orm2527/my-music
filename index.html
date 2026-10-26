@@ -87,7 +87,7 @@
             { title: "36.GO GO JUICE", artist: "Orm Kornnaphat", url: "36.GO GO JUICE.mp3" },
         ];
 
-        let currentSongIndex = 0; // 記錄目前播放的歌曲索引
+        let currentSongIndex = 0;
 
         const songListEl = document.getElementById('songList');
         const playerBar = document.getElementById('playerBar');
@@ -130,6 +130,20 @@
             audioElement.play();
             playerBar.classList.remove('hidden');
             playBtn.innerText = '⏸ 暫停';
+
+            // 支援手機背景播放與鎖定畫面控制 (Media Session API)
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: song.title,
+                    artist: song.artist,
+                    album: "LingOrm Music Archive"
+                });
+
+                navigator.mediaSession.setActionHandler('play', () => togglePlay());
+                navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+                navigator.mediaSession.setActionHandler('previoustrack', () => prevSong());
+                navigator.mediaSession.setActionHandler('nexttrack', () => nextSong());
+            }
         }
 
         // 播放/暫停切換
