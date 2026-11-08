@@ -9,23 +9,35 @@
 </head>
 <body style="background-image: url('9502.jpg'); background-size: cover; background-position: center; background-attachment: fixed;" class="text-gray-800 min-h-screen flex flex-col justify-between">
 
-    <!-- 頂部標題與搜尋區 -->
-    <div class="max-w-md mx-auto w-full p-4">
-        <h1 class="text-3xl font-bold text-purple-900 mb-1">LingOrm Music Archive</h1>
-        <p class="text-sm text-black-500 mb-4">LingOrm音樂收藏庫 感謝dek_duu_sha提供音檔</p>
+    <!-- 主容器：電腦版改為左右雙欄 (lg:flex)，手機版維持上下堆疊 -->
+    <div class="max-w-6xl mx-auto w-full p-4 lg:flex lg:gap-8 lg:py-8 flex-grow">
         
-        <!-- 搜尋列 -->
-        <input type="text" id="searchInput" placeholder="搜尋歌曲、歌手..." class="w-full p-3 rounded-xl border border-purple-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4">
+        <!-- 左側區塊：標題、搜尋列、說明 -->
+        <div class="lg:w-1/3 mb-6 lg:mb-0 lg:sticky lg:top-8 h-fit">
+            <h1 class="text-3xl font-bold text-purple-900 mb-1">LingOrm Music Archive</h1>
+            <p class="text-sm text-black-500 mb-4">LingOrm音樂收藏庫 感謝dek_duu_sha提供音檔</p>
+            
+            <!-- 搜尋列 -->
+            <input type="text" id="searchInput" placeholder="搜尋歌曲、歌手..." class="w-full p-3 rounded-xl border border-purple-200 bg-white/90 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4">
+            
+            <div class="hidden lg:block text-xs text-purple-950/70 bg-white/30 backdrop-blur-md p-4 rounded-xl border border-purple-200/50">
+                <p class="font-bold mb-1">💡 貼心小提示：</p>
+                <p>點擊右側曲目即可直接播放。播放時支援進度條快進、自動連播，以及手機鎖定畫面背景控制！</p>
+            </div>
+        </div>
         
-        <!-- 歌曲清單 -->
-        <div id="songList" class="space-y-3 mb-32">
-            <!-- 歌曲會透過 JavaScript 動態載入這裡 -->
+        <!-- 右側區塊：曲目清單 -->
+        <div class="lg:w-2/3 mb-28 lg:mb-0">
+            <div class="text-sm font-bold text-purple-900 mb-2 px-1">🎵 曲目列表</div>
+            <div id="songList" class="space-y-3">
+                <!-- 歌曲會透過 JavaScript 動態載入這裡 -->
+            </div>
         </div>
     </div>
 
     <!-- 底部音樂播放器（預設隱藏，點擊播放後出現） -->
-    <div id="playerBar" class="fixed bottom-0 left-0 right-0 bg-purple-900 text-white p-4 shadow-lg hidden">
-        <div class="max-w-md mx-auto">
+    <div id="playerBar" class="fixed bottom-0 left-0 right-0 bg-purple-900/95 backdrop-blur-md text-white p-4 shadow-2xl hidden z-50 border-t border-purple-700">
+        <div class="max-w-4xl mx-auto">
             <!-- 歌曲進度條 -->
             <div class="w-full mb-2">
                 <input type="range" id="progressBar" value="0" max="100" class="w-full accent-purple-300 cursor-pointer">
@@ -41,9 +53,9 @@
                     <div id="playerArtist" class="text-xs text-purple-300">歌手</div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button id="prevBtn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold">⏮ 上一首</button>
-                    <button onclick="togglePlay()" id="playBtn" class="bg-purple-300 text-purple-950 px-4 py-2 rounded-lg text-sm font-bold">⏸ 暫停</button>
-                    <button id="nextBtn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold">下一首 ⏭</button>
+                    <button id="prevBtn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition">⏮ 上一首</button>
+                    <button onclick="togglePlay()" id="playBtn" class="bg-purple-300 hover:bg-white text-purple-950 px-4 py-2 rounded-lg text-sm font-bold transition">⏸ 暫停</button>
+                    <button id="nextBtn" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold transition">下一首 ⏭</button>
                 </div>
             </div>
         </div>
@@ -63,7 +75,7 @@
             { title: "10.L-O-V-E", artist: "LingLing Kwong", url: "10.L-O-V-E.mp3" },
             { title: "11. Risk it all", artist: "Orm Kornnaphat", url: "11. Risk it all.mp3" },
             { title: "12. ขี้แง(Boys Don’t Cry)", artist: "LingOrm", url: "12. ขี้แง(Boys Don’t Cry).mp3" },
-            { title: "13. Magnetic", artist: "LingOrm LOLO ButterBear", url: "13. Magnetic" },
+            { title: "13. Magnetic", artist: "LingOrm LOLO ButterBear", url: "13.Magnetic.mp3" },
             { title: "15. หล่ออนิเมะ", artist: "LingOrm", url: "15. หล่ออนิเมะ.mp3" },
             { title: "16. Nobody", artist: "Ling x Oat x Pop", url: "16. Nobody.mp3" },
             { title: "18. สวยเด้งดิ้ง", artist: "LingLing Kwong", url: "18. สวยเด้งดิ้ง.mp3" },
