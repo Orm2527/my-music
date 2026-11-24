@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>LingOrm Music Archive</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#2e1065">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LingOrm Music">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #2e1065;
+            background-image: url('1127.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        :focus-visible { outline: 2px solid #d8b4fe; outline-offset: 2px; }
+        .player-pad { padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; transform: none !important; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen">
+
+    <main class="max-w-md md:max-w-lg lg:max-w-xl mx-auto md:ml-auto md:mr-12 w-full p-4">
+        <h1 class="text-3xl font-bold text-purple-300 mb-1">LingOrm Music Archive</h1>
+        <p class="text-sm text-white mb-4">LingOrm音樂收藏庫 感謝dek_duu_sha提供音檔</p>
+        <div id="categoryTabs" class="flex flex-wrap gap-2 mb-4" role="tablist" aria-label="歌曲分類"></div>
+        <div class="sticky top-0 z-10 -mx-4 px-4 pt-2 pb-3">
+            <input type="search" id="searchInput" placeholder="搜尋歌曲、歌手..." aria-label="搜尋歌曲或歌手"
+                class="w-full p-3 rounded-xl border border-purple-200/50 bg-white/60 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 placeholder-gray-600">
+            <p id="resultCount" class="text-xs text-purple-100 mt-2 px-1"></p>
+        </div>
+        <ul id="songList" class="flex flex-col gap-3 mt-3 mb-44"></ul>
+    </main>
+
+    <!-- 底部播放器 -->
+    <div id="playerBar" class="player-pad fixed bottom-0 left-0 right-0 bg-purple-900/95 backdrop-blur-md text-white pt-4 px-4 shadow-2xl border-t border-purple-700 hidden">
+        <div class="max-w-md md:max-w-3xl lg:max-w-4xl mx-auto">
+            <div class="w-full mb-2">
+                <input type="range" id="progressBar" value="0" min="0" max="100" step="0.1" aria-label="播放進度"
+                    class="w-full accent-purple-300 cursor-pointer">
+                <div class="flex justify-between text-xs text-purple-200">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                <div class="w-full md:w-auto text-center md:text-left min-w-0">
+                    <div id="playerTitle" class="font-bold text-sm truncate md:max-w-xs">歌曲名稱</div>
+                    <div id="playerArtist" class="text-xs text-purple-200 truncate md:max-w-xs">歌手</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="shuffleBtn" aria-pressed="false" title="隨機播放"
+                        class="bg-purple-700/70 hover:bg-purple-600 px-3 py-2 rounded-lg text-sm transition">🔀</button>
+                    <button id="prevBtn" class="bg-purple-700 hover:bg-purple-600 px-3 py-2 rounded-lg text-sm font-bold transition" aria-label="上一首">⏮</button>
+                    <button id="playBtn" class="bg-purple-300 text-purple-950 hover:bg-purple-200 px-5 py-2 rounded-lg text-sm font-bold transition min-w-[5.5rem]">⏸ 暫停</button>
+                    <button id="nextBtn" class="bg-purple-700 hover:bg-purple-600 px-3 py-2 rounded-lg text-sm font-bold transition" aria-label="下一首">⏭</button>
+                    <button id="repeatBtn" title="循環模式：清單循環"
+                        class="bg-purple-700/70 hover:bg-purple-600 px-3 py-2 rounded-lg text-sm transition">🔁</button>
+                </div>
+                <div class="hidden md:flex items-center gap-2 text-xs text-purple-200">
+                    <span aria-hidden="true">🔊</span>
+                    <input type="range" id="volumeBar" min="0" max="1" step="0.05" value="0.3" aria-label="音量"
+                        class="w-20 accent-purple-300 cursor-pointer">
+                </div>
+            </div>
+        </div>
+        <audio id="audioElement" preload="auto"></audio>
+    </div>
+
+    <script>
+        const songs = [
+            { title: "01.Dracula", artist: "LingOrm", url: "01.Dracula.mp3", category: "LingOrm Between us" },
+            { title: "02.Rockstar", artist: "LingOrm", url: "02.Rockstar.mp3", category: "LingOrm Between us" },
+            { title: "03.BadAngel", artist: "LingOrm", url: "03.BadAngel.mp3", category: "LingOrm Between us" },
+            { title: "04.heaven7", artist: "LingOrm", url: "04.heaven7.mp3", category: "LingOrm Between us" },
+            { title: "05.LoveOnTop", artist: "LingLing Kwong", url: "05.LoveOnTop.mp3", category: "LingOrm Between us" },
+            { title: "06.OnePunch", artist: "Orm Kornnaphat", url: "06.OnePunch.mp3", category: "LingOrm Between us" },
+            { title: "07.NOW", artist: "Orm x Gel Boys", url: "07.NOW.mp3", category: "LingOrm Between us" },
+            { title: "09.Until I Found You", artist: "LingLing Kwong", url: "09.Until I Found You.mp3", category: "LingOrm Between us" },
+            { title: "10.L-O-V-E", artist: "LingLing Kwong", url: "10.L-O-V-E.mp3", category: "LingOrm Between us" },
+            { title: "11. Risk it all", artist: "Orm Kornnaphat", url: "11. Risk it all.mp3", category: "LingOrm Between us" },
+            { title: "12. ขี้แง(Boys Don’t Cry)", artist: "LingOrm", url: "12. ขี้แง(Boys Don’t Cry).mp3", category: "LingOrm Between us" },
+            { title: "13. Magnetic", artist: "LingOrm LOLO ButterBear", url: "13. Magnetic.mp3", category: "LingOrm Between us" },
+            { title: "15. หล่ออนิเมะ", artist: "LingOrm", url: "15. หล่ออนิเมะ.mp3", category: "LingOrm Between us" },
+            { title: "16. Nobody", artist: "Ling x Oat x Pop", url: "16. Nobody.mp3", category: "LingOrm Between us" },
+            { title: "18. สวยเด้งดิ้ง", artist: "LingLing Kwong", url: "18. สวยเด้งดิ้ง.mp3", category: "LingOrm Between us" },
+            { title: "19. T2T", artist: "LingOrm", url: "19. T2T.mp3", category: "LingOrm Between us" },
+            { title: "20. Sports Car", artist: "Orm Kornnaphat", url: "20. Sports Car.mp3", category: "LingOrm Between us" },
+            { title: "21. หวานใจผมน่ารักกว่าใคร", artist: "LingOrm", url: "21. หวานใจผมน่ารักกว่าใคร.mp3", category: "LingOrm Between us" },
+            { title: "22. เจ็บนิดๆ", artist: "LingOrm x Bow", url: "22. เจ็บนิดๆ.mp3", category: "LingOrm Between us" },
+            { title: "23. เกินต้าน (Too Cute)", artist: "Bow", url: "23. เกินต้าน (Too Cute).mp3", category: "LingOrm Between us" },
+            { title: "24. Love Shot", artist: "LingOrm", url: "24. Love Shot.mp3", category: "LingOrm Between us" },
+            { title: "25. Ma Boy", artist: "LingOrm", url: "25. Ma Boy.mp3", category: "LingOrm Between us" },
+            { title: "26. ล็อกเป้า (Lock Pao)", artist: "LingOrm", url: "26. ล็อกเป้า (Lock Pao).mp3", category: "LingOrm Between us" },
+            { title: "27. I Am The Best", artist: "LingOrm", url: "27. I Am The Best.mp3", category: "LingOrm Between us" },
+            { title: "28. Touch", artist: "LingOrm", url: "28. Touch.mp3", category: "LingOrm Between us" },
+            { title: "29. การเดินทางที่สวยงาม", artist: "LingOrm", url: "29. การเดินทางที่สวยงาม.mp3", category: "LingOrm Between us" },
+            { title: "30. Rocket Festival(สัญญาเดือนหก)", artist: "LingOrm", url: "30. Rocket Festival(สัญญาเดือนหก).mp3", category: "LingOrm Between us" },
+            { title: "31. โอ้ละหนอ…My Love", artist: "LingOrm", url: "31. โอ้ละหนอ…My Love.mp3", category: "LingOrm Between us" },
+            { title: "32. เด็กดอยใจดี", artist: "LingOrm", url: "32. เด็กดอยใจดี.mp3", category: "LingOrm Between us" },
+            { title: "33.ไม่ได้ก็ไม่เอา (YOU ARE MY LIGHT)", artist: "Ling x PP", url: "33.ไม่ได้ก็ไม่เอา (YOU ARE MY LIGHT).mp3", category: "LingOrm Between us" },
+            { title: "34.FLY ME TO THE MOON CAN'T TAKE MY EYES OFF YOU", artist: "LingLing Kwong", url: "34.FLY ME TO THE MOON CAN'T TAKE MY EYES OFF YOU.mp3", category: "LingOrm Between us" },
+            { title: "35.G.A.Y", artist: "Orm Kornnaphat", url: "35.G.A.Y.mp3", category: "LingOrm Between us" },
+            { title: "36.GO GO JUICE", artist: "Orm Kornnaphat", url: "36.GO GO JUICE.mp3", category: "LingOrm Between us" },
+            { title: "Standing Next to You", artist: "LingOrm", url: "Standing Next to You.mp3", category: "Other" },
+            { title: "pinky up", artist: "Orm Kornnaphat", url: "pinky up.mp3", category: "Other" },
+            { title: "My name is Lo Lo", artist: "LOLO", url: "My name is Lo Lo.mp3", category: "Other" },
+            { title: "let's go", artist: "LingLing Kwong", url: "let's go.mp3", category: "Other" },
+            { title: "Forever", artist: "LingOrm", url: "Forever.mp3", category: "Other" },
+            { title: "โสดกะปริบกะปรอย", artist: "LingOrm", url: "โสดกะปริบกะปรอย.mp3", category: "Other" },
+            { title: "ถ้าตลอดกาลมีจริง", artist: "LingOrm", url: "ถ้าตลอดกาลมีจริง.mp3", category: "Other" },
+            { title: "ละลาย (LALALYE)", artist: "Orm Kornnaphat", url: "ละลาย (LALALYE).mp3", category: "Other" },
+            { title: "ฝน ธนสุนทร (Isan Girl Waiting for Love)", artist: "LingLing Kwong", url: "ฝน ธนสุนทร (Isan Girl Waiting for Love).mp3", category: "Other" },
+            { title: "กุหลาบ (KULARB)", artist: "LingOrm", url: "กุหลาบ (KULARB) ft. Gulf.mp3", category: "Other" },
+            { title: "DEJAYOU", artist: "LingOrm", url: "DEJAYOU.mp3", category: "Other" },
+            { title: "Dance the Night", artist: "LingOrm", url: "Dance the Night.mp3", category: "Other" },
+            { title: "L.O.V.E", artist: "LingOrm", url: "L.O.V.E.mp3", category: "Other" },
+        ];
+
+        // ---------- 元素 ----------
+        const $ = id => document.getElementById(id);
+        const songListEl = $('songList'), categoryTabsEl = $('categoryTabs');
+        const playerBar = $('playerBar'), playerTitle = $('playerTitle'), playerArtist = $('playerArtist');
+        const audio = $('audioElement'), playBtn = $('playBtn');
+        const progressBar = $('progressBar'), volumeBar = $('volumeBar');
+        const currentTimeEl = $('currentTime'), durationEl = $('duration');
+        const searchInput = $('searchInput'), resultCount = $('resultCount');
+        const shuffleBtn = $('shuffleBtn'), repeatBtn = $('repeatBtn');
+
+        // ---------- 狀態 ----------
+        const ALL = '全部';
+        const categories = [ALL, ...new Set(songs.map(s => s.category))];
+        let currentCategory = ALL;
+        let currentSongIndex = -1;
+        let isShuffle = false;
+        let repeatMode = 'all';
+        let isSeeking = false;
+        const REPEAT_LABEL = { all: ['🔁', '循環模式：清單循環'], one: ['🔂', '循環模式：單曲循環'], off: ['➡️', '循環模式：不循環'] };
+
+        // ---------- 音量（記住上次設定，預設 30%） ----------
+        let savedVolume = 0.3;
+        try {
+            const v = parseFloat(localStorage.getItem('volume'));
+            if (!Number.isNaN(v)) savedVolume = Math.min(1, Math.max(0, v));
+        } catch (e) {}
+        audio.volume = savedVolume;
+        volumeBar.value = savedVolume;
+
+        function getFilteredIndexes() {
+            const keyword = searchInput.value.trim().toLowerCase();
+            const result = [];
+            songs.forEach((song, i) => {
+                const okCat = currentCategory === ALL || song.category === currentCategory;
+                const okKey = !keyword ||
+                    song.title.toLowerCase().includes(keyword) ||
+                    song.artist.toLowerCase().includes(keyword);
+                if (okCat && okKey) result.push(i);
+            });
+            return result;
+        }
+
+        function renderCategories() {
+            categoryTabsEl.innerHTML = '';
+            categories.forEach(cat => {
+                const count = cat === ALL ? songs.length : songs.filter(s => s.category === cat).length;
+                const active = currentCategory === cat;
+                const btn = document.createElement('button');
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('aria-selected', active);
+                btn.className = active
+                    ? "bg-purple-800 text-white px-4 py-2 rounded-xl text-sm font-bold shadow transition"
+                    : "bg-white/60 hover:bg-white/80 text-purple-950 px-4 py-2 rounded-xl text-sm font-semibold transition";
+                btn.textContent = `${cat} (${count})`;
+                btn.onclick = () => {
+                    currentCategory = cat;
+                    searchInput.value = '';
+                    renderCategories();
+                    renderSongs();
+                };
+                categoryTabsEl.appendChild(btn);
+            });
+        }
+
+        function renderSongs() {
+            songListEl.innerHTML = '';
+            const indexes = getFilteredIndexes();
+            resultCount.textContent = `共 ${indexes.length} 首`;
+            if (indexes.length === 0) {
+                const empty = document.createElement('li');
+                empty.className = "text-center py-8 text-white font-medium bg-purple-950/40 backdrop-blur-sm rounded-xl";
+                empty.textContent = searchInput.value.trim() ? '找不到符合的歌曲，換個關鍵字試試' : '這個分類目前還沒有歌曲喔！';
+                songListEl.appendChild(empty);
+                return;
+            }
+            const playing = !audio.paused;
+            indexes.forEach(i => {
+                const song = songs[i];
+                const isCurrent = i === currentSongIndex;
+                const li = document.createElement('li');
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = "w-full text-left p-3.5 rounded-xl backdrop-blur-sm transition " +
+                    (isCurrent
+                        ? "bg-white-900/70 shadow-md border-2 border-purple-300"
+                        : "bg-white-950/45 hover:bg-purple-900/55 shadow-sm border-2 border-transparent");
+                if (isCurrent) card.setAttribute('aria-current', 'true');
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between gap-3 px-2";
+                const info = document.createElement('div');
+                info.className = "overflow-hidden flex-1";
+                const tag = document.createElement('span');
+                tag.className = "inline-block text-[10px] bg-purple-200/80 text-purple-900 px-2 py-0.5 rounded font-bold mb-1";
+                tag.textContent = song.category;
+                const h3 = document.createElement('h3');
+                h3.className = "font-bold text-white truncate text-base";
+                h3.textContent = song.title;
+                h3.title = song.title;
+                const p = document.createElement('p');
+                p.className = "text-xs text-purple-100 truncate";
+                p.textContent = song.artist;
+                info.append(tag, h3, p);
+                const badge = document.createElement('span');
+                badge.className = "bg-purple-200/80 text-purple-950 px-4 py-2 rounded-lg text-xs font-bold shrink-0 shadow-sm";
+                badge.textContent = isCurrent ? (playing ? '♪ PLAYING' : '⏸ PAUSED') : 'PLAY';
+                row.append(info, badge);
+                card.appendChild(row);
+                card.onclick = () => (isCurrent ? togglePlay() : playSong(i));
+                li.appendChild(card);
+                songListEl.appendChild(li);
+            });
+        }
+
+        // ---------- 播放控制 ----------
+        function setPlayLabel() {
+            playBtn.textContent = audio.paused ? '▶ 播放' : '⏸ 暫停';
+        }
+
+        // 背景播放修復：同步鎖屏進度（Media Session Position State）
+        function updatePositionState() {
+            if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+            if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+            try {
+                navigator.mediaSession.setPositionState({
+                    duration: audio.duration,
+                    playbackRate: audio.playbackRate || 1,
+                    position: Math.min(Math.max(0, audio.currentTime || 0), audio.duration)
+                });
+            } catch (e) {}
+        }
+
+        // 背景播放修復：用另一個隱藏 Audio 預載下一首，鎖屏換歌不用等網路
+        const preloadAudio = new Audio();
+        preloadAudio.preload = 'auto';
+        function preloadNextSong() {
+            try {
+                if (isShuffle || repeatMode === 'one') return;
+                const idx = pickNext(1, false);
+                if (idx === null || idx === currentSongIndex) return;
+                const nextUrl = new URL(songs[idx].url, location.href).href;
+                if (preloadAudio.src !== nextUrl) {
+                    preloadAudio.src = songs[idx].url;
+                    preloadAudio.load();
+                }
+            } catch (e) {}
+        }
+
+        function playSong(index) {
+            currentSongIndex = index;
+            const song = songs[index];
+            playerTitle.textContent = song.title;
+            playerArtist.textContent = song.artist;
+            audio.src = song.url;
+            progressBar.value = 0;
+            currentTimeEl.textContent = '0:00';
+            durationEl.textContent = '0:00';
+            playerBar.classList.remove('hidden');
+            document.title = `${song.title} · LingOrm Music Archive`;
+            audio.play().catch(err => {
+                if (err.name !== 'AbortError') console.warn('播放失敗：', song.url, err);
+                setPlayLabel();
+                renderSongs();
+            });
+            setPlayLabel();
+            renderSongs();
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: song.title,
+                    artist: song.artist,
+                    album: "LingOrm Music Archive",
+                    artwork: [
+                        { src: '1127.jpg', sizes: '512x512', type: 'image/jpeg' },
+                        { src: '1127.jpg', sizes: '192x192', type: 'image/jpeg' },
+                        { src: '1127.jpg', sizes: '96x96', type: 'image/jpeg' }
+                    ]
+                });
+            }
+            preloadNextSong();
+        }
+
+        function togglePlay() {
+            if (currentSongIndex === -1) {
+                const list = getFilteredIndexes();
+                if (list.length) playSong(list[0]);
+                return;
+            }
+            if (audio.paused) audio.play().catch(() => {});
+            else audio.pause();
+        }
+
+        function pickNext(step, auto = false) {
+            const list = getFilteredIndexes();
+            if (!list.length) return null;
+            const pos = list.indexOf(currentSongIndex);
+            if (isShuffle && list.length > 1) {
+                let r;
+                do { r = list[Math.floor(Math.random() * list.length)]; } while (r === currentSongIndex);
+                return r;
+            }
+            if (pos === -1) return list[0];
+            const nextPos = pos + step;
+            if (nextPos >= list.length || nextPos < 0) {
+                if (auto && repeatMode === 'off') return null;
+                return list[(nextPos + list.length) % list.length];
+            }
+            return list[nextPos];
+        }
+
+        function nextSong(auto = false) {
+            const i = pickNext(1, auto);
+            if (i === null) { audio.pause(); audio.currentTime = 0; return; }
+            playSong(i);
+        }
+        function prevSong() {
+            if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+            const i = pickNext(-1);
+            if (i !== null) playSong(i);
+        }
+
+        // ---------- 事件 ----------
+        playBtn.addEventListener('click', togglePlay);
+        $('prevBtn').addEventListener('click', prevSong);
+        $('nextBtn').addEventListener('click', () => nextSong(false));
+
+        shuffleBtn.addEventListener('click', () => {
+            isShuffle = !isShuffle;
+            shuffleBtn.setAttribute('aria-pressed', isShuffle);
+            shuffleBtn.className = "px-3 py-2 rounded-lg text-sm transition " +
+                (isShuffle ? "bg-purple-300 text-purple-950" : "bg-purple-700/70 hover:bg-purple-600");
+        });
+
+        repeatBtn.addEventListener('click', () => {
+            repeatMode = { all: 'one', one: 'off', off: 'all' }[repeatMode];
+            const [icon, label] = REPEAT_LABEL[repeatMode];
+            repeatBtn.textContent = icon;
+            repeatBtn.title = label;
+            repeatBtn.setAttribute('aria-label', label);
+        });
+
+        audio.addEventListener('play', () => { setPlayLabel(); renderSongs(); updatePositionState();
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; });
+        audio.addEventListener('pause', () => { setPlayLabel(); renderSongs(); updatePositionState();
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
+        audio.addEventListener('ended', () => {
+            if (repeatMode === 'one') { audio.currentTime = 0; audio.play().catch(() => {}); }
+            else nextSong(true);
+        });
+        audio.addEventListener('error', () => {
+            if (currentSongIndex === -1) return;
+            playerArtist.textContent = '⚠ 這首無法播放，已自動跳過';
+            setTimeout(() => nextSong(true), 1200);
+        });
+
+        function formatTime(sec) {
+            if (!Number.isFinite(sec)) return '0:00';
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        audio.addEventListener('loadedmetadata', () => {
+            if (Number.isFinite(audio.duration)) {
+                durationEl.textContent = formatTime(audio.duration);
+                progressBar.max = audio.duration;
+            }
+            updatePositionState();
+        });
+        audio.addEventListener('timeupdate', () => {
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            if (!isSeeking) progressBar.value = audio.currentTime;
+            updatePositionState();
+        });
+        audio.addEventListener('seeked', updatePositionState);
+        audio.addEventListener('ratechange', updatePositionState);
+
+        progressBar.addEventListener('input', () => {
+            isSeeking = true;
+            currentTimeEl.textContent = formatTime(progressBar.value);
+        });
+        progressBar.addEventListener('change', () => {
+            audio.currentTime = progressBar.value;
+            isSeeking = false;
+            updatePositionState();
+        });
+
+        volumeBar.addEventListener('input', () => {
+            audio.volume = volumeBar.value;
+            try { localStorage.setItem('volume', volumeBar.value); } catch (e) {}
+        });
+
+        let searchTimer;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(renderSongs, 150);
+        });
+
+        document.addEventListener('keydown', e => {
+            const tag = document.activeElement && document.activeElement.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
+            if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+            else if (e.code === 'ArrowRight' && currentSongIndex !== -1) audio.currentTime += 5;
+            else if (e.code === 'ArrowLeft' && currentSongIndex !== -1) audio.currentTime -= 5;
+        });
+
+        // 系統媒體控制（鎖定畫面、耳機按鍵）— 只需註冊一次
+        if ('mediaSession' in navigator) {
+            const handlers = {
+                play: togglePlay,
+                pause: togglePlay,
+                previoustrack: prevSong,
+                nexttrack: () => nextSong(false),
+                // 背景播放修復：補上快轉／倒轉／指定位置／停止，鎖屏控制才完整
+                seekbackward: (details) => {
+                    audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset || 10));
+                    updatePositionState();
+                },
+                seekforward: (details) => {
+                    const max = Number.isFinite(audio.duration) ? audio.duration : audio.currentTime + (details.seekOffset || 10);
+                    audio.currentTime = Math.min(max, audio.currentTime + (details.seekOffset || 10));
+                    updatePositionState();
+                },
+                seekto: (details) => {
+                    if (details.seekTime != null) {
+                        if (details.fastSeek && ('fastSeek' in audio)) audio.fastSeek(details.seekTime);
+                        else audio.currentTime = details.seekTime;
+                    }
+                    updatePositionState();
+                },
+                stop: () => { audio.pause(); }
+            };
+            Object.entries(handlers).forEach(([action, fn]) => {
+                try { navigator.mediaSession.setActionHandler(action, fn); } catch (e) {}
+            });
+        }
+
+        // 背景播放修復：註冊 Service Worker（PWA 快取，需 https，GitHub Pages 符合）
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => {
+                    console.log('SW register failed', err);
+                });
+            });
+        }
+
+        // ---------- 初始化 ----------
+        renderCategories();
+        renderSongs();
+    </script>
+</body>
+</html>
